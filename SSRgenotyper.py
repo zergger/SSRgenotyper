@@ -80,7 +80,7 @@ ambiguousSlavageThreshold = args.spuriousAlleleRemoval
 mismatch = args.mismatch
 
 refDict = SeqIO.to_dict(SeqIO.parse(fastaRef, "fasta"))
-
+#print(refDict)
 
 def prepSam(samFile, includeNames = False):
     #samFile is string
@@ -157,13 +157,24 @@ def getMaxLen(array):
     return myMax
             
 def findSpecificRepeat(read, repeat, flankL, flankR):
-    
     reg = "".join([flankL,"((", repeat, ")+)", flankR])
     if mismatch > 0:
         mismatchStr = str(mismatch)
         reg = "".join([flankL,"{e<=",mismatchStr,"}((", repeat, ")+)", flankR, "{e<=",mismatchStr,"}"])
-    found = regex.findall(reg, str(read))
+    # read="GATTTAAAAGTCGCGAGCCGCTGGTTGCTTAGAGAGAGAGATTTTGTGTGTTTGGTTTTGTCTGACGCTC"
+    # print(read)
+    # print(reg)
+    # exit()
+    # found = regex.findall(reg, str(read))
+    found = ''
+    try:
+        found = regex.findall(reg, str(read))
+    except Exception: 
+        pass
     theMaxLen = getMaxLen(found)
+    # print(found)
+    # print(theMaxLen)
+    # exit()
     ##filter repeat here
     if theMaxLen/len(repeat) < minSSRfreq:
         return None
@@ -307,6 +318,9 @@ def writeStats(df, runtime, refProcessTime, totalSeqs, foundSeqs):
     statOut.close()
 
 def findSamReads(subSam, refInput):
+    # print(subSam)
+    # print(refInput)
+    # exit()
     refPattern = refInput[0]
     #refName = refInput[1]
     flankL =refInput[2]
@@ -314,6 +328,8 @@ def findSamReads(subSam, refInput):
     samRepeatCounts = []
     for r in subSam:
         appendable = findSpecificRepeat(r, refPattern, flankL, flankR)
+        # print(r)
+        # exit()
         if appendable != None:
             samRepeatCounts.append(appendable)
     returnable = printResults(samRepeatCounts)
@@ -362,29 +378,54 @@ def searchRef(refDict, outputDict):
         refName = name.rstrip()
         refSeq = refDict[refName].seq
         refSeq = str(refSeq)
-        refPattern2, refNumRepeats2, flankL2, flankR2 = getRefSeqPattern(refName, 2)
-        refPattern3, refNumRepeats3, flankL3, flankR3 = getRefSeqPattern(refName, 3)
-        refPattern4, refNumRepeats4, flankL4, flankR4 = getRefSeqPattern(refName, 4)
+        # refSeqSub = refSeq[flankOffset : -flankOffset]
+        # print(refName)
+        refPattern=refName[refName.find('(')+1:refName.find(')')]
+        refNumRepeats=int(refName[refName.find(')')+1:refName.find(':')])
+        refRepeats=refNumRepeats*refPattern
+        flankL=refSeq[:refSeq.find(refRepeats)]
+        flankR=refSeq[refSeq.rfind(refRepeats)+len(refRepeats):]
+        # print(refPattern)
+        # print(refNumRepeats)
+        # print(flankL)
+        # print(flankR)
+        # print(refSeq)
+        # exit()
+        # refPattern2, refNumRepeats2, flankL2, flankR2 = getRefSeqPattern(refName, 2)
+        # refPattern3, refNumRepeats3, flankL3, flankR3 = getRefSeqPattern(refName, 3)
+        # refPattern4, refNumRepeats4, flankL4, flankR4 = getRefSeqPattern(refName, 4)
+        # print(refName)
+        # print(refPattern3)
+        # print(refNumRepeats3)
+        # print(flankL3)
+        # print(flankR3)
+        # exit()
+        # if (refNumRepeats2 == None):
+            # refNumRepeats2 = 0
+        # if (refNumRepeats3 == None):
+            # refNumRepeats3 = 0
+        # if (refNumRepeats4 == None):
+            # refNumRepeats4 = 0
+        # maxFreqArray = [refNumRepeats2, refNumRepeats3, refNumRepeats4]   
+        # maxFreq = max(maxFreqArray)
         
-        if (refNumRepeats2 == None):
-            refNumRepeats2 = 0
-        if (refNumRepeats3 == None):
-            refNumRepeats3 = 0
-        if (refNumRepeats4 == None):
-            refNumRepeats4 = 0
-        maxFreqArray = [refNumRepeats2, refNumRepeats3, refNumRepeats4]   
-        maxFreq = max(maxFreqArray)
-        
-        if (maxFreq < minRefFreq):
-            refData[refName] = 0
-        elif(refNumRepeats2 == maxFreq):
-            refData[refName] = [refPattern2, refNumRepeats2, flankL2, flankR2]
-        elif(refNumRepeats3 == maxFreq):
-            refData[refName] = [refPattern3, refNumRepeats3, flankL3, flankR3]
-        elif(refNumRepeats4 == maxFreq):
-            refData[refName] = [refPattern4, refNumRepeats4, flankL4, flankR4]
+        # if (maxFreq < minRefFreq):
+            # refData[refName] = 0
+        # elif(refNumRepeats2 == maxFreq):
+            # refData[refName] = [refPattern2, refNumRepeats2, flankL2, flankR2]
+        # elif(refNumRepeats3 == maxFreq):
+            # refData[refName] = [refPattern3, refNumRepeats3, flankL3, flankR3]
+        # elif(refNumRepeats4 == maxFreq):
+            # refData[refName] = [refPattern4, refNumRepeats4, flankL4, flankR4]
+        # else:
+            # refData[refName] = 0
+        if (refNumRepeats > 0):
+            refData[refName] = [refPattern, refNumRepeats, flankL, flankR]
         else:
             refData[refName] = 0
+        
+        
+        
         
     #create first 2 columns in outputDict
     outputDict["RefName"] = []
@@ -663,6 +704,8 @@ def createGenePop(outputDf):
     
     outputDf = removeMonomorph(outputDf)
     title = "SSR markers for "+outFile # first line
+    # print(outputDf)
+    # exit()
     locusList = outputDf.iloc[:,0].tolist()       
     
     with open(outFile + '.pop.txt', 'w') as popWriter:
@@ -696,6 +739,8 @@ def main():
     
     outputDict = {}
     refData = searchRef(refDict, outputDict)
+    # print(refData)
+    # exit()
     totalSeqs = len(refData)
     foundSeqs = totalSeqs - sum(x == 0 for x in refData.values())
     refProcessTime = str(round((time.time() - startTime)/60, 2))
