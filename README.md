@@ -8,7 +8,7 @@ The key modifications in this version are as follows:
 - **Removal of Built-in SSR Identification Algorithm**: The built-in algorithm for SSR identification has been removed. Instead, this version directly utilizes SSR information mined by MISA, which should be pre-written in the input files. By reading this SSR information from the input files, the tool performs genotyping directly.
 - **Addition of Jupyter Notebooks**: Two Jupyter notebooks have been added for convenience. These notebooks are designed for personal use and may not be universally applicable:
   - **SNPvcf2gpop**: This notebook is designed to convert SNP data from VCF format to GenePop format.
-  - **STRvcf2gpop**: This notebook facilitates the conversion of VCF files obtained from lobSTR to GenePop format.
+  - **STRvcf2gpop**: This notebook facilitates the conversion of VCF files obtained from [lobSTR](https://github.com/mgymrek/lobstr-code) to GenePop format.
 
 ## Note
 The additional Jupyter notebooks are primarily for personal use and are not guaranteed to work in all environments or setups. Users are encouraged to modify and adapt the notebooks according to their specific requirements.
